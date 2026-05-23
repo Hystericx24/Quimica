@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema Químico</title>
+
+<style>
+
+body{
+    font-family: Arial, sans-serif;
+    background: #f0f4f8;
+    margin: 0;
+    padding: 20px;
+}
+
+.container{
+    max-width: 800px;
+    margin: auto;
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0px 0px 10px rgba(0,0,0,0.2);
+}
+
+h1{
+    text-align: center;
+    color: #1e3a5f;
+}
+
+.section{
+    margin-top: 25px;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+}
+
+button{
+    background: #1e88e5;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin-top: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+button:hover{
+    background: #1565c0;
+}
+
+select{
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+}
+
+.resultado{
+    margin-top: 15px;
+    background: #eef5ff;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<h1>SISTEMA QUÍMICO</h1>
+
+<!-- COMBINACIÓN -->
+<div class="section">
+
+<h2>1. Combinar elementos</h2>
+
+<select id="combo1"></select>
+<select id="combo2"></select>
+
+<button onclick="combinar()">Combinar</button>
+
+<div class="resultado" id="resultadoCombinar"></div>
+
+</div>
+
+<!-- REDOX -->
+<div class="section">
+
+<h2>2. Operación REDOX</h2>
+
+<select id="redox1"></select>
+<select id="redox2"></select>
+
+<button onclick="redox()">Analizar REDOX</button>
+
+<div class="resultado" id="resultadoRedox"></div>
+
+</div>
+
+<!-- ELECTRONEGATIVIDAD -->
+<div class="section">
+
+<h2>3. Electronegatividad</h2>
+
+<select id="electro"></select>
+
+<button onclick="electronegatividad()">Consultar</button>
+
+<div class="resultado" id="resultadoElectro"></div>
+
+</div>
+
+</div>
+
+<script>
+
+// ==========================================================
+// BASE DE DATOS
+// ==========================================================
+
+const elementos = {
+
+"H":  {nombre:"Hidrógeno", valencia:1, electronegatividad:2.20, tipo:"no metal"},
+"Li": {nombre:"Litio", valencia:1, electronegatividad:0.98, tipo:"metal"},
+"Be": {nombre:"Berilio", valencia:2, electronegatividad:1.57, tipo:"metal"},
+"B":  {nombre:"Boro", valencia:3, electronegatividad:2.04, tipo:"metaloide"},
+"C":  {nombre:"Carbono", valencia:4, electronegatividad:2.55, tipo:"no metal"},
+"N":  {nombre:"Nitrógeno", valencia:-3, electronegatividad:3.04, tipo:"no metal"},
+"O":  {nombre:"Oxígeno", valencia:-2, electronegatividad:3.44, tipo:"no metal"},
+"F":  {nombre:"Flúor", valencia:-1, electronegatividad:3.98, tipo:"no metal"},
+"Na": {nombre:"Sodio", valencia:1, electronegatividad:0.93, tipo:"metal"},
+"Mg": {nombre:"Magnesio", valencia:2, electronegatividad:1.31, tipo:"metal"},
+"Al": {nombre:"Aluminio", valencia:3, electronegatividad:1.61, tipo:"metal"},
+"Si": {nombre:"Silicio", valencia:4, electronegatividad:1.90, tipo:"metaloide"},
+"P":  {nombre:"Fósforo", valencia:-3, electronegatividad:2.19, tipo:"no metal"},
+"S":  {nombre:"Azufre", valencia:-2, electronegatividad:2.58, tipo:"no metal"},
+"Cl": {nombre:"Cloro", valencia:-1, electronegatividad:3.16, tipo:"no metal"},
+"K":  {nombre:"Potasio", valencia:1, electronegatividad:0.82, tipo:"metal"},
+"Ca": {nombre:"Calcio", valencia:2, electronegatividad:1.00, tipo:"metal"},
+"Cr": {nombre:"Cromo", valencia:3, electronegatividad:1.66, tipo:"metal"},
+"Mn": {nombre:"Manganeso", valencia:2, electronegatividad:1.55, tipo:"metal"},
+"Fe": {nombre:"Hierro", valencia:2, electronegatividad:1.83, tipo:"metal"},
+"Co": {nombre:"Cobalto", valencia:2, electronegatividad:1.88, tipo:"metal"},
+"Ni": {nombre:"Níquel", valencia:2, electronegatividad:1.91, tipo:"metal"},
+"Cu": {nombre:"Cobre", valencia:2, electronegatividad:1.90, tipo:"metal"},
+"Zn": {nombre:"Zinc", valencia:2, electronegatividad:1.65, tipo:"metal"},
+"Br": {nombre:"Bromo", valencia:-1, electronegatividad:2.96, tipo:"no metal"}
+
+};
+
+const compuestos_validos = {
+"NaCl": "Cloruro de sodio",
+"H2O": "Agua",
+"MgO": "Óxido de magnesio",
+"CaO": "Óxido de calcio",
+"FeO": "Óxido de hierro",
+"CaCl2": "Cloruro de calcio",
+"CO2": "Dióxido de carbono",
+"NH3": "Amoniaco",
+"KBr": "Bromuro de potasio",
+"CuO": "Óxido de cobre"
+};
+
+// ==========================================================
+// CARGAR SELECTS
+// ==========================================================
+
+function cargarElementos(){
+
+    const selects = [
+        "combo1",
+        "combo2",
+        "redox1",
+        "redox2",
+        "electro"
+    ];
+
+    selects.forEach(id => {
+
+        const select = document.getElementById(id);
+
+        for(let simbolo in elementos){
+
+            let option = document.createElement("option");
+
+            option.value = simbolo;
+            option.text = simbolo + " - " + elementos[simbolo].nombre;
+
+            select.appendChild(option);
+        }
+
+    });
+
+}
+
+cargarElementos();
+
+// ==========================================================
+// MCD
+// ==========================================================
+
+function gcd(a, b){
+    return b === 0 ? a : gcd(b, a % b);
+}
+
+// ==========================================================
+// GENERAR FORMULA
+// ==========================================================
+
+function generarFormula(e1, e2){
+
+    let v1 = Math.abs(elementos[e1].valencia);
+    let v2 = Math.abs(elementos[e2].valencia);
+
+    let divisor = gcd(v1, v2);
+
+    let n1 = v2 / divisor;
+    let n2 = v1 / divisor;
+
+    let formula = e1;
+
+    if(n1 > 1){
+        formula += n1;
+    }
+
+    formula += e2;
+
+    if(n2 > 1){
+        formula += n2;
+    }
+
+    return formula;
+}
+
+// ==========================================================
+// COMBINAR
+// ==========================================================
+
+function combinar(){
+
+    let e1 = document.getElementById("combo1").value;
+    let e2 = document.getElementById("combo2").value;
+
+    let a = elementos[e1];
+    let b = elementos[e2];
+
+    let diferencia = Math.abs(
+        a.electronegatividad -
+        b.electronegatividad
+    );
+
+    let tipo = "";
+
+    if(diferencia > 1.7){
+        tipo = "Iónico";
+    }
+    else if(diferencia >= 0.5){
+        tipo = "Covalente polar";
+    }
+    else{
+        tipo = "Covalente no polar";
+    }
+
+    if(a.tipo === "metal" && b.tipo === "metal"){
+        document.getElementById("resultadoCombinar").innerHTML =
+        "❌ Dos metales no forman compuesto molecular";
+        return;
+    }
+
+    let formula = generarFormula(e1, e2);
+
+    let mensaje = `
+        <b>Diferencia de electronegatividad:</b> ${diferencia.toFixed(2)} <br>
+        <b>Tipo de enlace:</b> ${tipo} <br>
+        <b>Fórmula:</b> ${formula} <br>
+    `;
+
+    if(compuestos_validos[formula]){
+        mensaje += `<b>✅ Combinación válida:</b> ${compuestos_validos[formula]}`;
+    }
+    else{
+        mensaje += `❌ La combinación no existe`;
+    }
+
+    document.getElementById("resultadoCombinar").innerHTML = mensaje;
+
+}
+
+// ==========================================================
+// ELECTRONEGATIVIDAD
+// ==========================================================
+
+function electronegatividad(){
+
+    let simbolo = document.getElementById("electro").value;
+
+    let e = elementos[simbolo];
+
+    document.getElementById("resultadoElectro").innerHTML = `
+        <b>Elemento:</b> ${e.nombre} <br>
+        <b>Símbolo:</b> ${simbolo} <br>
+        <b>Electronegatividad:</b> ${e.electronegatividad} <br>
+        <b>Valencia:</b> ${e.valencia} <br>
+        <b>Tipo:</b> ${e.tipo}
+    `;
+}
+
+// ==========================================================
+// REDOX
+// ==========================================================
+
+function redox(){
+
+    let oxidante = document.getElementById("redox1").value;
+    let reductor = document.getElementById("redox2").value;
+
+    let ox = elementos[oxidante];
+    let red = elementos[reductor];
+
+    let diferencia = Math.abs(
+        ox.electronegatividad -
+        red.electronegatividad
+    );
+
+    let mensaje = `
+        <b>${reductor}</b> = ${red.nombre}<br>
+        ➡ Se oxida<br>
+        ➡ Pierde electrones<br><br>
+
+        <b>${oxidante}</b> = ${ox.nombre}<br>
+        ➡ Se reduce<br>
+        ➡ Gana electrones<br><br>
+
+        <b>Diferencia de electronegatividad:</b>
+        ${diferencia.toFixed(2)}<br><br>
+    `;
+
+    if(diferencia > 1.7){
+        mensaje += "✅ Reacción REDOX probable";
+    }
+    else{
+        mensaje += "⚠ Reacción REDOX débil o poco probable";
+    }
+
+    document.getElementById("resultadoRedox").innerHTML = mensaje;
+
+}
+
+</script>
+
+</body>
+</html>
